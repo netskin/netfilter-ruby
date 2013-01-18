@@ -5,6 +5,10 @@ class Netfilter
 
     delegate :namespace, :to => :chain
 
+    def self.import(chain, data)
+      new(chain, data)
+    end
+
     def initialize(chain, definition)
       self.chain = chain
       self.definition = definition
@@ -23,6 +27,10 @@ class Netfilter
           args << "--#{key} #{value}"
         end
       end
+    end
+
+    def export
+      definition
     end
 
     private

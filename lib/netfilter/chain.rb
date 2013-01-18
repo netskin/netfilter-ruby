@@ -5,6 +5,14 @@ class Netfilter
 
     delegate :namespace, :to => :table
 
+    def self.import(table, data)
+      new(table, data[:name]).tap do |chain|
+        data[:filters].each do |data|
+          chain.filters << Filter.import(chain, data)
+        end
+      end
+    end
+
     def initialize(table, name)
       self.table = table
       self.name = name.to_s
@@ -32,6 +40,13 @@ class Netfilter
           commands << ["--append #{name_as_argument}", *filter.args]
         end
       end
+    end
+
+    def export
+      {
+        :name => name,
+        :filters => filters.map{ |filter| filter.export },
+      }
     end
   end
 end

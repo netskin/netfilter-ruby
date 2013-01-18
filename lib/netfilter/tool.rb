@@ -2,10 +2,19 @@ class Netfilter
   class Tool
     attr_accessor :tables, :namespace
 
-    def initialize(namespace = nil, &block)
-      self.tables = []
+    def self.import(data)
+      data = HashWithIndifferentAccess.new(data)
+      new(data[:namespace]).tap do |tool|
+        data[:tables].each do |data|
+          tool.tables << Table.import(tool, data)
+        end
+      end
+    end
+
+    def initialize(namespace = nil)
       self.namespace = namespace
-      yield(self) if block
+      self.tables = []
+      yield(self) if block_given?
     end
 
     def table(name, &block)
@@ -51,6 +60,13 @@ class Netfilter
       commands.reverse.each do |command|
         execute(argument_rename(argument_rename(command, "new-chain", "delete-chain"), "append", "delete"))
       end
+    end
+
+    def export
+      {
+        :namespace => namespace,
+        :tables => tables.map{ |table| table.export },
+      }
     end
 
     private

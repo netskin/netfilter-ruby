@@ -16,10 +16,18 @@ class Netfilter
 
   attr_accessor :eb_tables, :ip_tables
 
+  def self.import(data)
+    data = HashWithIndifferentAccess.new(data)
+    new.tap do |netfilter|
+      netfilter.eb_tables = EbTables.import(data[:eb_tables])
+      netfilter.ip_tables = IpTables.import(data[:ip_tables])
+    end
+  end
+
   def initialize(namespace = nil)
     self.eb_tables = EbTables.new(namespace)
     self.ip_tables = IpTables.new(namespace)
-    yield(eb_tables, ip_tables)
+    yield(eb_tables, ip_tables) if block_given?
   end
 
   def up
@@ -55,5 +63,12 @@ class Netfilter
   def namespace=(name)
     eb_tables.namespace = name
     ip_tables.namespace = name
+  end
+
+  def export
+    {
+      :eb_tables => eb_tables.export,
+      :ip_tables => ip_tables.export,
+    }
   end
 end
