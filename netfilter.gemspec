@@ -8,8 +8,8 @@ Gem::Specification.new do |gem|
   gem.version       = Netfilter::VERSION
   gem.authors       = ["Corin Langosch"]
   gem.email         = ["info@corinlangosch.com"]
-  gem.description   = %q{TODO: Write a gem description}
-  gem.summary       = %q{TODO: Write a gem summary}
+  gem.description   = %q{Awesome Netfilter Management Gem}
+  gem.summary       = %q{Awesome Netfilter Management Gem}
   gem.homepage      = ""
 
   gem.files         = `git ls-files`.split($/)
