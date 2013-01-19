@@ -6,6 +6,7 @@ class Netfilter
     delegate :namespace, :to => :tool
 
     def self.import(tool, data)
+      data = data.symbolize_keys
       new(tool, data[:name]).tap do |table|
         data[:chains].each do |data|
           table.chains << Chain.import(table, data)

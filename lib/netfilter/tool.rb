@@ -3,7 +3,7 @@ class Netfilter
     attr_accessor :tables, :namespace
 
     def self.import(data)
-      data = HashWithIndifferentAccess.new(data)
+      data = data.symbolize_keys
       new(data[:namespace]).tap do |tool|
         data[:tables].each do |data|
           tool.tables << Table.import(tool, data)
@@ -44,22 +44,19 @@ class Netfilter
     end
 
     def up
-      executed = []
+      @executed_commands = []
       commands.each do |command|
         execute(command)
-        executed << command
+        @executed_commands << command
       end
     rescue SystemError => e
-      executed.reverse.each do |command|
-        execute(argument_rename(argument_rename(command, "new-chain", "delete-chain"), "append", "delete"))
-      end
+      rollback
       raise e
     end
 
     def down
-      commands.reverse.each do |command|
-        execute(argument_rename(argument_rename(command, "new-chain", "delete-chain"), "append", "delete"))
-      end
+      @executed_commands = commands
+      rollback
     end
 
     def export
@@ -70,6 +67,12 @@ class Netfilter
     end
 
     private
+
+    def rollback
+      @executed_commands.reverse.each do |command|
+        execute(argument_rename(argument_rename(command, "new-chain", "delete-chain"), "append", "delete"))
+      end
+    end
 
     def argument_rename(command, old_name, new_name)
       command.gsub(/--#{Regexp.escape(old_name)}(\s|$)/, "--#{new_name}\\1")
