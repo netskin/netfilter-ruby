@@ -83,7 +83,7 @@ class Netfilter
     end
 
     def execute(command)
-      puts "Executing: #{command}"
+      # puts "Executing: #{command}"
       stdout = `#{command} 2>&1`
       status = $?
       raise SystemError, :command => command, :error => stdout.strip unless status.exitstatus == 0
