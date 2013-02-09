@@ -10,6 +10,7 @@ describe Netfilter do
       it "should apply the rules of all underlying tools" do
         @netfilter.eb_tables.should_receive(:up).ordered
         @netfilter.ip_tables.should_receive(:up).ordered
+        @netfilter.ip6_tables.should_receive(:up).ordered
         @netfilter.up
       end
 
@@ -23,15 +24,16 @@ describe Netfilter do
 
     describe "down" do
       it "should remove the rules of all underlying tools" do
-        @netfilter.ip_tables.should_receive(:down).ordered
         @netfilter.eb_tables.should_receive(:down).ordered
+        @netfilter.ip_tables.should_receive(:down).ordered
+        @netfilter.ip6_tables.should_receive(:down).ordered
         @netfilter.down
       end
 
       it "should apply removed rules again if anything fails" do
-        @netfilter.ip_tables.should_receive(:down).ordered
-        @netfilter.eb_tables.should_receive(:down).ordered.and_return{ raise ArgumentError, "fake" }
-        @netfilter.ip_tables.should_receive(:up).ordered
+        @netfilter.eb_tables.should_receive(:down).ordered
+        @netfilter.ip_tables.should_receive(:down).ordered.and_return{ raise ArgumentError, "fake" }
+        @netfilter.eb_tables.should_receive(:up).ordered
         lambda{ @netfilter.down }.should raise_error(ArgumentError, "fake")
       end
     end
@@ -42,6 +44,14 @@ describe Netfilter do
           ip.table :filter do |t|
             t.chain :input do |c|
               c.filter :protocol => :udp, :jump => :drop
+            end
+          end
+        end
+
+        @netfilter.ip6_tables do |ip|
+          ip.table :filter do |t|
+            t.chain :input do |c|
+              c.filter :protocol => :tcp, :jump => :drop
             end
           end
         end
