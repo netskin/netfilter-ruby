@@ -27,9 +27,9 @@ class Netfilter
   def self.import(data)
     data = data.symbolize_keys
     new.tap do |netfilter|
-      netfilter.eb_tables = EbTables.import(data[:eb_tables])
-      netfilter.ip_tables = IpTables.import(data[:ip_tables])
-      netfilter.ip6_tables = Ip6Tables.import(data[:ip6_tables])
+      netfilter.eb_tables = data[:eb_tables] ? EbTables.import(data[:eb_tables]) : EbTables.new
+      netfilter.ip_tables = data[:ip_tables] ? IpTables.import(data[:ip_tables]) : IpTables.new
+      netfilter.ip6_tables = data[:ip6_tables] ? Ip6Tables.import(data[:ip6_tables]) : Ip6Tables.new
     end
   end
 
