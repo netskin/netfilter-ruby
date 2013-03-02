@@ -7,14 +7,12 @@ class Netfilter
     delegate :namespace, :to => :chain
 
     def self.import(chain, data)
-      case data
-      when String
-        new(chain, "append", data)
-      when Hash
+      if (["definition", :definition] & data.keys).any?
         data = data.symbolize_keys
         new(chain, data[:type], data[:definition])
       else
-        raise ArgumentError, "data is of invalid type"
+        # support legacy export format
+        new(chain, "append", data)
       end
     end
 
