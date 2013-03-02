@@ -22,8 +22,16 @@ class Netfilter
       yield(self) if block_given?
     end
 
+    def append(definition)
+      filters << Filter.new(self, "append", definition)
+    end
+
+    def insert(definition)
+      filters << Filter.new(self, "insert", definition)
+    end
+
     def filter(definition)
-      filters << Filter.new(self, definition)
+      append(definition)
     end
 
     def native?
@@ -38,7 +46,7 @@ class Netfilter
       [].tap do |commands|
         commands << ["--new-chain #{name_as_argument}"] unless native?
         filters.each do |filter|
-          commands << ["--append #{name_as_argument}", *filter.args]
+          commands << ["--#{filter.type} #{name_as_argument}", *filter.args]
         end
       end
     end

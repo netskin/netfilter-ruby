@@ -7,6 +7,7 @@ describe Netfilter::Tool do
         eb.table :filter do |t|
           t.chain :input do |c|
             c.filter :protocol => :tcp, :dport => 22, :jump => :text
+            c.insert :protocol => :udp, :dport => 53, :jump => :text
           end
 
           t.chain :text do |c|
@@ -20,6 +21,7 @@ describe Netfilter::Tool do
       it "should return a list of system command to apply the rules to the system" do
         @tool.commands.should eq [
           "tool --table filter --append INPUT --protocol tcp --dport 22 --jump text",
+          "tool --table filter --insert INPUT --protocol udp --dport 53 --jump text",
           "tool --table filter --new-chain text",
           "tool --table filter --append text --protocol udp --dport 80 --jump RETURN",
         ]
@@ -29,6 +31,7 @@ describe Netfilter::Tool do
         @tool.namespace = "bobby"
         @tool.commands.should eq [
           "tool --table filter --append INPUT --protocol tcp --dport 22 --jump bobby-text",
+          "tool --table filter --insert INPUT --protocol udp --dport 53 --jump bobby-text",
           "tool --table filter --new-chain bobby-text",
           "tool --table filter --append bobby-text --protocol udp --dport 80 --jump RETURN",
         ]
@@ -42,6 +45,7 @@ describe Netfilter::Tool do
         @tool.up
         executed.should eq [
           "tool --table filter --append INPUT --protocol tcp --dport 22 --jump text",
+          "tool --table filter --insert INPUT --protocol udp --dport 53 --jump text",
           "tool --table filter --new-chain text",
           "tool --table filter --append text --protocol udp --dport 80 --jump RETURN",
         ]
@@ -51,7 +55,7 @@ describe Netfilter::Tool do
         trigger = true
         executed = []
         @tool.stub(:execute) do |command|
-          if trigger && executed.count == 2
+          if trigger && executed.count == 3
             trigger = false
             raise Netfilter::SystemError, "fake"
           end
@@ -60,8 +64,10 @@ describe Netfilter::Tool do
         lambda{ @tool.up }.should raise_error(Netfilter::SystemError, "fake")
         executed.should eq [
           "tool --table filter --append INPUT --protocol tcp --dport 22 --jump text",
+          "tool --table filter --insert INPUT --protocol udp --dport 53 --jump text",
           "tool --table filter --new-chain text",
           "tool --table filter --delete-chain text",
+          "tool --table filter --delete INPUT --protocol udp --dport 53 --jump text",
           "tool --table filter --delete INPUT --protocol tcp --dport 22 --jump text",
         ]
       end
@@ -75,6 +81,7 @@ describe Netfilter::Tool do
         executed.should eq [
           "tool --table filter --delete text --protocol udp --dport 80 --jump RETURN",
           "tool --table filter --delete-chain text",
+          "tool --table filter --delete INPUT --protocol udp --dport 53 --jump text",
           "tool --table filter --delete INPUT --protocol tcp --dport 22 --jump text",
         ]
       end

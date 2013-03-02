@@ -1,16 +1,26 @@
 class Netfilter
   class Filter
     attr_accessor :chain
+    attr_accessor :type
     attr_accessor :definition
 
     delegate :namespace, :to => :chain
 
     def self.import(chain, data)
-      new(chain, data)
+      case data
+      when String
+        new(chain, "append", data)
+      when Hash
+        data = data.symbolize_keys
+        new(chain, data[:type], data[:definition])
+      else
+        raise ArgumentError, "data is of invalid type"
+      end
     end
 
-    def initialize(chain, definition)
+    def initialize(chain, type, definition)
       self.chain = chain
+      self.type = type
       self.definition = definition
     end
 
@@ -30,7 +40,10 @@ class Netfilter
     end
 
     def export
-      definition
+      {
+        :type => type,
+        :definition => definition,
+      }
     end
 
     private

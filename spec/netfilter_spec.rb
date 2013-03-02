@@ -44,6 +44,7 @@ describe Netfilter do
           ip.table :filter do |t|
             t.chain :input do |c|
               c.filter :protocol => :udp, :jump => :drop
+              c.insert :protocol => :tcp, :jump => :drop
             end
           end
         end

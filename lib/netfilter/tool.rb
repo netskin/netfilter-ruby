@@ -70,7 +70,10 @@ class Netfilter
 
     def rollback
       @executed_commands.reverse.each do |command|
-        execute(argument_rename(argument_rename(command, "new-chain", "delete-chain"), "append", "delete"))
+        command = argument_rename(command, "new-chain", "delete-chain")
+        command = argument_rename(command, "append", "delete")
+        command = argument_rename(command, "insert", "delete")
+        execute(command)
       end
     end
 
