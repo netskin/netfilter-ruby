@@ -1,3 +1,3 @@
 class Netfilter
-  VERSION = "3.3"
+  VERSION = "3.4"
 end
