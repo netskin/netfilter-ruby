@@ -50,7 +50,7 @@ class Netfilter
       data = data.to_s
       data = data.gsub("_", "-")
       data = data.upcase if NATIVE_TARGETS.include?(data.downcase)
-      data = data.downcase if %w(arpreply).include?(data.downcase)
+      data = data.downcase if %w(arpreply mark).include?(data.downcase)
       data
     end
   end
