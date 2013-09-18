@@ -27,6 +27,26 @@ class Netfilter
       end
     end
 
+    def self.delete_chain(name)
+      commands = []
+      parse.each do |table, chains|
+        chains.each do |chain, rules|
+          rules.each do |rule|
+            if rule.match("-j #{name}")
+              commands << "--table #{table} --delete #{chain} #{rule}"
+            end
+          end
+        end
+
+        chains.each do |chain, rules|
+          if chain.match(name)
+            commands << "--table #{table} --delete-chain #{chain}"
+          end
+        end
+      end
+      commands.each{ |command| execute("#{executable} #{command}") }
+    end
+
     def initialize(namespace = nil)
       self.namespace = namespace
       self.tables = {}
