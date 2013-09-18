@@ -11,6 +11,21 @@ class Netfilter
       end
     end
 
+    def self.executable
+      name.demodulize.downcase
+    end
+
+    def self.execute(command)
+      # puts "Executing: #{command}"
+      stdout = `#{command} 2>&1`.strip
+      status = $?
+      if status.exitstatus == 0
+        stdout
+      else
+        raise SystemError, :command => command, :error => stdout
+      end
+    end
+
     def initialize(namespace = nil)
       self.namespace = namespace
       self.tables = []
@@ -66,6 +81,10 @@ class Netfilter
       }
     end
 
+    def executable
+      self.class.executable
+    end
+
     private
 
     def rollback
@@ -81,15 +100,8 @@ class Netfilter
       command.gsub(/--#{Regexp.escape(old_name)}(\s|$)/, "--#{new_name}\\1")
     end
 
-    def executable
-      @executable ||= self.class.name.demodulize.downcase
-    end
-
     def execute(command)
-      # puts "Executing: #{command}"
-      stdout = `#{command} 2>&1`
-      status = $?
-      raise SystemError, :command => command, :error => stdout.strip unless status.exitstatus == 0
+      self.class.execute(command)
     end
   end
 end
