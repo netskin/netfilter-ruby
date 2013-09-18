@@ -7,13 +7,8 @@ class Netfilter
     delegate :namespace, :to => :chain
 
     def self.import(chain, data)
-      if (["definition", :definition] & data.keys).any?
-        data = data.symbolize_keys
-        new(chain, data[:type], data[:definition])
-      else
-        # support legacy export format
-        new(chain, "append", data)
-      end
+      data = data.symbolize_keys
+      new(chain, data[:type], data[:definition])
     end
 
     def initialize(chain, type, definition)

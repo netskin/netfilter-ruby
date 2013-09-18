@@ -9,7 +9,8 @@ class Netfilter
       data = data.symbolize_keys
       new(tool, data[:name]).tap do |table|
         data[:chains].each do |data|
-          table.chains << Chain.import(table, data)
+          chain = Chain.import(table, data)
+          table.chains[chain.name.to_s.downcase] = chain
         end
       end
     end
@@ -17,13 +18,17 @@ class Netfilter
     def initialize(tool, name)
       self.tool = tool
       self.name = name.to_s
-      self.chains = []
+      self.chains = {}
       raise ArgumentError, "unsupported table '#{name}'" unless native?
       yield(self) if block_given?
     end
 
     def chain(name, &block)
-      chains << Chain.new(self, name, &block)
+      key = name.to_s.downcase
+      (chains[key] || Chain.new(self, name)).tap do |chain|
+        chains[key] = chain
+        block.call(chain) if block
+      end
     end
 
     def native?
@@ -32,18 +37,25 @@ class Netfilter
 
     def commands
       [].tap do |commands|
-        chains.each do |chain|
+        chains.values.each do |chain|
           chain.commands.each do |command|
             commands << command.unshift("--table #{name}")
           end
         end
+
+        cmds = [[], []]
+        commands.each do |cmd|
+          index = cmd[1].include?("--new-chain") ? 0 : 1
+          cmds[index] << cmd
+        end
+        commands.replace(cmds[0] + cmds[1])
       end
     end
 
     def export
       {
         :name => name,
-        :chains => chains.map{ |chain| chain.export },
+        :chains => chains.values.map{ |chain| chain.export },
       }
     end
   end

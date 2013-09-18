@@ -27,7 +27,7 @@ class Netfilter
     end
 
     def insert(definition)
-      filters << Filter.new(self, "insert", definition)
+      filters.unshift Filter.new(self, "append", definition)
     end
 
     def filter(definition)

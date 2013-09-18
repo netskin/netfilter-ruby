@@ -6,7 +6,8 @@ class Netfilter
       data = data.symbolize_keys
       new(data[:namespace]).tap do |tool|
         data[:tables].each do |data|
-          tool.tables << Table.import(tool, data)
+          table = Table.import(tool, data)
+          tool.tables[table.name.to_s.downcase] = table
         end
       end
     end
@@ -28,18 +29,22 @@ class Netfilter
 
     def initialize(namespace = nil)
       self.namespace = namespace
-      self.tables = []
+      self.tables = {}
       yield(self) if block_given?
     end
 
     def table(name, &block)
-      tables << Table.new(self, name, &block)
+      key = name.to_s.downcase
+      (tables[key] || Table.new(self, name)).tap do |table|
+        tables[key] = table
+        block.call(table) if block
+      end
     end
 
     def pp
-      tables.each do |table|
+      tables.values.sort_by(&:name).each do |table|
         puts [table.name]*"\t"
-        table.chains.each do |chain|
+        table.chains.values.sort_by(&:name).each do |chain|
           puts ["", chain.name_as_argument]*"\t"
           chain.filters.each do |filter|
             puts ["", "", filter]*"\t"
@@ -50,7 +55,7 @@ class Netfilter
 
     def commands
       [].tap do |commands|
-        tables.each do |table|
+        tables.values.each do |table|
           table.commands.each do |command|
             commands << command.unshift(executable)*" "
           end
@@ -77,7 +82,7 @@ class Netfilter
     def export
       {
         :namespace => namespace,
-        :tables => tables.map{ |table| table.export },
+        :tables => tables.values.map{ |table| table.export },
       }
     end
 
