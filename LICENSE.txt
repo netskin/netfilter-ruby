@@ -1,4 +1,4 @@
-Copyright (c) 2013 Corin Langosch
+Copyright (c) 2013 Netskin GmbH
 
 MIT License
 
